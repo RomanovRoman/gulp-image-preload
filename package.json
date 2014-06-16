@@ -1,0 +1,36 @@
+{
+  "name": "gulp-image-preload",
+  "version": "0.0.1",
+  "description": "image preload for gulp",
+  "main": "index.js",
+  "scripts": {
+    "test": "jshint index.js && node_modules/.bin/mocha -R spec tests/*.js",
+    "test1": "jshint index.js && node_modules/.bin/mocha  --debug-brk -R spec tests/*.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/lexich/gulp-image-preload.git"
+  },
+  "keywords": [
+    "gulp",
+    "gulpplugin",
+    "image_preload"
+  ],
+  "author": "lexich121@gmail.com",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/lexich/gulp-image-preload/issues"
+  },
+  "homepage": "https://github.com/lexich/gulp-image-preload",
+  "dependencies": {
+    "gulp-util": "^2.2.16",    
+    "lodash": "^2.4.1",
+    "through2": "^0.4.2"
+  },
+  "devDependencies": {
+    "jshint": "^2.5.1",
+    "mocha": "^1.20.0",
+    "should": "^4.0.0",
+    "vinyl-fs": "^0.3.0"
+  }
+}
