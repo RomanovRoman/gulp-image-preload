@@ -42,7 +42,7 @@ describe('gulp-image-preload',function(){
       stream.write(streamFile);
     });
     
-    it('test config',function(done){
+    it('test simple output',function(done){
       var pattern = path_join(__dirname, "fixtures/*.jpeg");
       vfs
         .src(pattern)
@@ -54,9 +54,65 @@ describe('gulp-image-preload',function(){
           should.equal(info.indexOf('</head>'), info.length - 7);
           should.exist(info.indexOf("window.PRELOADER") > 0 );
           should.exist(info.indexOf('cat1.jpeg') > 0);
-          should.exist(info.indexOf('cat2.jpeg') > 0);
+          should.exist(info.indexOf('123.cat2.jpeg') > 0);
         })
         .on('end', done);
     });
+    it('test custom output {jsvar}',function(done){
+      var pattern = path_join(__dirname, "fixtures/*.jpeg");
+      vfs
+        .src(pattern)
+        .pipe(imagepreload({
+          jsvar:"PRELOADER2"
+        }))
+        .on('data',function(info){          
+          should.exist(info);
+          should.equal(info.indexOf('<!--preloader:js-->'), 0);
+          should.exist(info.indexOf('<!--endpreloader:js-->') > 0 );
+          should.equal(info.indexOf('</head>'), info.length - 7);
+          should.exist(info.indexOf("window.PRELOADER2") > 0 );
+          should.exist(info.indexOf('cat1.jpeg') > 0);
+          should.exist(info.indexOf('123.cat2.jpeg') > 0);
+        })
+        .on('end', done);
+    });
+    it('test custom output {rev}',function(done){
+      var pattern = path_join(__dirname, "fixtures/*.jpeg");
+      vfs
+        .src(pattern)
+        .pipe(imagepreload({
+          rev:true
+        }))
+        .on('data',function(info){   
+          should.exist(info);
+          should.equal(info.indexOf('<!--preloader:js-->'), 0);
+          should.exist(info.indexOf('<!--endpreloader:js-->') > 0 );
+          should.equal(info.indexOf('</head>'), info.length - 7);
+          should.exist(info.indexOf("window.PRELOADER") > 0 );
+          should.exist(info.indexOf('cat1.jpeg') > 0);
+          should.exist(info.indexOf('"cat2.jpeg":"123.cat2.jpeg"') > 0);
+        })
+        .on('end', done);
+    });
+    it('test custom output {injectFile}',function(done){
+      var pattern = path_join(__dirname, "fixtures/*.jpeg");
+      vfs
+        .src(pattern)
+        .pipe(imagepreload({
+          injectFile: path_join(__dirname, "fixtures/index.html" )          
+        }))
+        .on('data',function(info){   
+          should.exist(info);
+          should.exist(info.indexOf('<!--preloader:js-->') > 0 );
+          should.exist(info.indexOf('<!--endpreloader:js-->') > 0 );
+          should.exist(info.indexOf('</head>') > 0 );
+          should.exist(info.indexOf("window.PRELOADER") > 0 );
+          should.exist(info.indexOf('cat1.jpeg') > 0);
+          should.exist(info.indexOf('"cat2.jpeg":"123.cat2.jpeg"') > 0);
+        })
+        .on('end', done);
+    });
+
+
   });  
 });

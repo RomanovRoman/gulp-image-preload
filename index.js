@@ -50,19 +50,20 @@ module.exports = function (options) {
       var fileData = data.toString();  
       fileData = fileData.replace(/window\.PRELOADER[ ]*=/, "");
       var script = "window." + options.jsvar + " = " + fileData + "; window." + options.jsvar + "=window." + options.jsvar + "(" + content + ");";
-      
+      var result = "<!--preloader:js--><script> " + script + " </script><!--endpreloader:js--></head>";
       if(options.injectFile === null){
-        var result = "<!--preloader:js--><script> " + script + " </script><!--endpreloader:js--></head>";
         self.emit('data',result);
         self.emit('end');
       } else {
         var rx = /<[ ]*\/[ ]*head[ ]*>/;
         var rxClean = /<!--[ ]*preloader:js[ ]*-->.+<!--[ ]*endpreloader:js[ ]*-->/;
-        fs.readFile(options.injectFile, function(err, html){
+        fs.readFile(options.injectFile, function(err, buffer){          
           if(!!err){
             return self.emit('error',err);
           }
-          result = html.replace(rxClean, "").replace(rx, result);
+          var html =  buffer.toString();
+          html = html.replace(rxClean, "");
+          result = html.replace(rx, result);
           self.emit('data',result);
           self.emit('end');
         });
