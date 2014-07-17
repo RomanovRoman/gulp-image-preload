@@ -4,8 +4,7 @@
   "description": "image preload for gulp",
   "main": "index.js",
   "scripts": {
-    "test": "jshint index.js && node_modules/.bin/mocha -R spec tests/*.js",
-    "test1": "jshint index.js && node_modules/.bin/mocha  --debug-brk -R spec tests/*.js"
+    "test": "jshint index.js && node_modules/.bin/mocha -R spec tests/*.js"
   },
   "repository": {
     "type": "git",

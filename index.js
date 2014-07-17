@@ -7,8 +7,10 @@ var fs = require('fs');
 
 module.exports = function (options) {
   options = _.defaults(options || {},{
-    jsvar: "PRELOADER",
-    injectFile: null,
+    jsvar: "PRELOADER",    
+    injectFile: function(filename){
+      return /\.html$/.test(filename);
+    },
     rev: false,
     reduceRev: function(filename) {
       return filename.replace(/([^\.]+)\.(.+)/, "$2");
@@ -19,6 +21,7 @@ module.exports = function (options) {
   }
 
   var buffer = {};
+  var injectFiles = [];
 
   function processData(file, enc, next){    
     var self = this;
@@ -31,6 +34,10 @@ module.exports = function (options) {
       return next();
     }
     var filename = path.normalize(file.path);
+    if(options.injectFile(filename)){
+      injectFiles.push(file);
+      return next();
+    }
     var pieces = filename.split(path.sep);
     var pointer = _.reduce(pieces.slice(0, pieces.length - 1), (function(pointer, item) {
       return pointer[item] || (pointer[item] = {});
@@ -51,25 +58,27 @@ module.exports = function (options) {
       fileData = fileData.replace(/window\.PRELOADER[ ]*=/, "");
       var script = "window." + options.jsvar + " = " + fileData + "; window." + options.jsvar + "=window." + options.jsvar + "(" + content + ");";
       var result = "<!--preloader:js--><script> " + script + " </script><!--endpreloader:js--></head>";
-      if(options.injectFile === null){
+      if(!injectFiles.length){
         self.emit('data',result);
         self.emit('end');
       } else {
         var rx = /<[ ]*\/[ ]*head[ ]*>/;
         var rxClean = /<!--[ ]*preloader:js[ ]*-->.+<!--[ ]*endpreloader:js[ ]*-->/;
-        fs.readFile(options.injectFile, function(err, buffer){          
-          if(!!err){
-            return self.emit('error',err);
-          }
-          var html =  buffer.toString();
+        injectFiles.forEach(function(file){
+          var html = file.contents.toString();
           html = html.replace(rxClean, "");
-          result = html.replace(rx, result);
-          self.emit('data',result);
-          self.emit('end');
+          html = html.replace(rx, result);
+          var newFile = new gutil.File({
+            cwd: file.cwd,
+            base: file.base,
+            path: file.path,
+            contents: new Buffer(html)            
+          });          
+          self.emit('data',newFile);
         });
-      }
+        self.emit('end');
+      }      
     });
-    
   }
 
   return through2.obj({}, processData, endStream);
