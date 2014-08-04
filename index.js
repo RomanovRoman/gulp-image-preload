@@ -24,7 +24,7 @@ module.exports = function (options) {
 
   var buffer = {};
 
-  function processData(file, enc, next){    
+  function processData(file, enc, next){
     if (file.isNull()) {
       this.push(file); // pass along
       return next();
@@ -74,7 +74,7 @@ module.exports = function (options) {
       } else {
         var script = buffer.toString();
         var result;
-        if(!options.script){
+        if(!!options.script){
           result = "<!--preloader:js--><script src='" + options.scriptPath + "'></script><!--endpreloader:js--></head>";
         } else {
           result = "<!--preloader:js--><script> " + script + " </script><!--endpreloader:js--></head>";

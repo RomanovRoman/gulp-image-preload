@@ -33,8 +33,16 @@ function imageFile(imagename){
   })
 }
 
+var TMP = path_join(__dirname, "../tmp");
+
 describe('gulp-image-preload',function(){
   describe("imagepreload()",function(){
+    beforeEach(function(){
+      deleteFolderRecursive(TMP);
+    });
+    afterEach(function(){
+      deleteFolderRecursive(TMP);
+    });
     it('emptyFile',function(done){
       var stream = imagepreload();
       var emptyFile = {
@@ -66,10 +74,10 @@ describe('gulp-image-preload',function(){
         .pipe(imagepreload())
         .pipe(through2.obj(function(file, enc, next){
           var info = file.toString();
-          should.exist(info);
-          should.exist(info.indexOf("window.PRELOADER") > 0 , 'window.PRELOADER');
-          should.exist(info.indexOf('cat1.jpeg') > 0, 'cat1.jpeg');
-          should.exist(info.indexOf('123.cat2.jpeg') > 0, '123.cat2.jpeg');
+          info.should.be.hmtl;
+          info.should.containEql("window.PRELOADER");
+          info.should.containEql('cat1.jpeg');
+          info.should.containEql('123.cat2.jpeg');
           next();
         }, function(){
           done();
@@ -84,10 +92,10 @@ describe('gulp-image-preload',function(){
         }))
         .pipe(through2.obj(function(file, enc, next){
           var info = file.toString();
-          should.exist(info);
-          should.exist(info.indexOf("window.PRELOADER2") > 0 );
-          should.exist(info.indexOf('cat1.jpeg') > 0);
-          should.exist(info.indexOf('123.cat2.jpeg') > 0);
+          info.should.be.html;
+          info.should.containEql("window.PRELOADER2");
+          info.should.containEql('cat1.jpeg');
+          info.should.containEql('123.cat2.jpeg');
           next();
         }, function(next){
           next();
@@ -103,10 +111,10 @@ describe('gulp-image-preload',function(){
         }))
         .pipe(through2.obj(function(file, enc, next){
           var info = file.toString();
-          should.exist(info);
-          should.exist(info.indexOf("window.PRELOADER") > 0 );
-          should.exist(info.indexOf('cat1.jpeg') > 0);
-          should.exist(info.indexOf('"cat2.jpeg":"123.cat2.jpeg"') > 0);
+          info.should.be.html;
+          info.should.containEql("window.PRELOADER");
+          info.should.containEql('cat1.jpeg');
+          info.should.containEql('"cat2.jpeg":"123.cat2.jpeg"');
           next();
         }, function(next){
           next();
@@ -127,13 +135,15 @@ describe('gulp-image-preload',function(){
         .pipe(through2.obj(function(file, enc, next){
           counts++;
           var info = file.contents.toString();
-          should.exist(info);
-          should.exist(info.indexOf('<!--preloader:js-->') > 0 );
-          should.exist(info.indexOf('<!--endpreloader:js-->') > 0 );
-          should.exist(info.indexOf('</head>') > 0 );
-          should.exist(info.indexOf("window.PRELOADER") > 0 );
-          should.exist(info.indexOf('cat1.jpeg') > 0);
-          should.exist(info.indexOf('"cat2.jpeg":"123.cat2.jpeg"') > 0);
+          info.should.be.html;
+
+          info.should.containEql('<!--preloader:js-->');
+          info.should.containEql('<!--endpreloader:js-->');
+          info.should.containEql('</head>');
+          info.should.containEql("window.PRELOADER");
+          info.should.containEql('cat1.jpeg');
+          info.should.containEql('"123.cat2.jpeg":"123.cat2.jpeg"');
+
           next();
         }, function(next){
           should.equal(counts,2);
@@ -143,8 +153,8 @@ describe('gulp-image-preload',function(){
     });
     it('test custom create new files',function(done){
       var pattern = path_join(__dirname, "fixtures", "*.jpeg");
-      var dest = path_join(__dirname, "../tmp");
-      deleteFolderRecursive(dest);
+      var dest = TMP;
+
       vfs.src(pattern)
         .pipe(imagepreload({
           inline:path_join(__dirname, 'fixtures', 'index.html')
@@ -152,15 +162,14 @@ describe('gulp-image-preload',function(){
         .pipe(vfs.dest(dest))
         .on('end',function(){
           should.equal(fs.existsSync('tmp/index.html'), true, 'file tmp/index.html not exist');
-          deleteFolderRecursive(dest);
           done();
 
         });
     });
     it('test create script file which integrates to another',function(done){
       var pattern = path_join(__dirname, "fixtures", "*.jpeg");
-      var dest = path_join(__dirname, "../tmp");
-      deleteFolderRecursive(dest);
+      var dest = TMP;
+
       vfs.src(pattern)
         .pipe(imagepreload({
           inline:path_join(__dirname, 'fixtures', 'index.html'),
@@ -170,7 +179,14 @@ describe('gulp-image-preload',function(){
         .on('end',function(){
           should.equal(fs.existsSync('tmp/index.html'), true, 'file tmp/index.html not exist');
           should.equal(fs.existsSync('tmp/test.js'), true, 'file tmp/test.js not exist');
-          deleteFolderRecursive(dest);
+          var data2 = fs.readFileSync('tmp/test.js').toString();
+          data2.should.containEql("window.PRELOADER");
+
+          var data1 = fs.readFileSync('tmp/index.html').toString();
+          data1.should.containEql("<script src='test.js'");
+
+
+
           done();
         });
 
