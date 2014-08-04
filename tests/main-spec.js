@@ -119,7 +119,7 @@ describe('gulp-image-preload',function(){
       vfs
         .src(pattern)
         .pipe(imagepreload({
-          dest:[
+          inline:[
             path_join(__dirname, 'fixtures', 'index.html'),
             path_join(__dirname, 'fixtures', 'index2.html'),
           ]
@@ -148,7 +148,7 @@ describe('gulp-image-preload',function(){
       vfs
         .src(pattern)
         .pipe(imagepreload({ 
-          dest:path_join(__dirname, 'fixtures', 'index.html')
+          inline:path_join(__dirname, 'fixtures', 'index.html')
         }))
         .pipe(vfs.dest(dest))
         .on('end',function(){

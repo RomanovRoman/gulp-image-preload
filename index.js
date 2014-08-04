@@ -13,7 +13,7 @@ module.exports = function (options) {
     reduceRev: function(filename) {
       return filename.replace(/([^\.]+)\.(.+)/, "$2");
     },
-    dest:null
+    inline:null
   });
   if (options.inlineLoad === null) {
     options.inlineLoad = options.inlineFile;
@@ -66,14 +66,14 @@ module.exports = function (options) {
       if(type != 'buffer'){
         self.emit('error', new PluginError('gulp-image-preload', 'Need buffer in load template'));
       }
-      if(options.dest === null){
+      if(options.inline === null){
         self.push(buffer);
         next();
         finish();
       } else {        
         var script = buffer.toString();
         var result = "<!--preloader:js--><script> " + script + " </script><!--endpreloader:js--></head>";
-        inline_script.call(this, options.dest, result, function(){
+        inline_script.call(this, options.inline, result, function(){
           next();
           finish();
         });        
