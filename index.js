@@ -13,18 +13,18 @@ module.exports = function (options) {
     reduceRev: function(filename) {
       return filename.replace(/([^\.]+)\.(.+)/, "$2");
     },
-    inline:null
+    inline:null,
+    script:null,
+    scriptPath:null
   });
-  if (options.inlineLoad === null) {
-    options.inlineLoad = options.inlineFile;
-  }
+  if(!options.scriptPath)
+    options.scriptPath = options.script;
 
   var templatePath = path.join(__dirname, 'template', 'inject.min.js');
 
   var buffer = {};
 
-  function processData(file, enc, next){
-    var self = this;
+  function processData(file, enc, next){    
     if (file.isNull()) {
       this.push(file); // pass along
       return next();
@@ -62,7 +62,8 @@ module.exports = function (options) {
       next();
     });
 
-    var through2_finalize = through2.obj(function(buffer, type, next){      
+    var createScript = false;
+    var through2_finalize = through2.obj(function(buffer, type, next){
       if(type != 'buffer'){
         self.emit('error', new PluginError('gulp-image-preload', 'Need buffer in load template'));
       }
@@ -70,14 +71,31 @@ module.exports = function (options) {
         self.push(buffer);
         next();
         finish();
-      } else {        
+      } else {
         var script = buffer.toString();
-        var result = "<!--preloader:js--><script> " + script + " </script><!--endpreloader:js--></head>";
+        var result;
+        if(!options.script){
+          result = "<!--preloader:js--><script src='" + options.scriptPath + "'></script><!--endpreloader:js--></head>";
+        } else {
+          result = "<!--preloader:js--><script> " + script + " </script><!--endpreloader:js--></head>";
+        }
+        if(options.script && !createScript){
+          createScript = true;
+          var scriptFile = new gutil.File({
+            cwd:__dirname,
+            base:__dirname,
+            path: options.script,
+            contents: buffer
+          });
+          self.push(scriptFile);
+        }
         inline_script.call(this, options.inline, result, function(){
           next();
-          finish();
-        });        
+        });
       }
+    }, function(next){
+      next();
+      finish();
     });
 
     function inline_script(src, script, finish){
@@ -98,9 +116,9 @@ module.exports = function (options) {
               contents: new Buffer(html)
             });
 
-            self.push(file);
+            self.push(newFile);
             next();
-          }, 
+          },
           function(next)
           {
             next();

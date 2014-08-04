@@ -66,7 +66,7 @@ describe('gulp-image-preload',function(){
         .pipe(imagepreload())
         .pipe(through2.obj(function(file, enc, next){
           var info = file.toString();
-          should.exist(info);          
+          should.exist(info);
           should.exist(info.indexOf("window.PRELOADER") > 0 , 'window.PRELOADER');
           should.exist(info.indexOf('cat1.jpeg') > 0, 'cat1.jpeg');
           should.exist(info.indexOf('123.cat2.jpeg') > 0, '123.cat2.jpeg');
@@ -84,7 +84,7 @@ describe('gulp-image-preload',function(){
         }))
         .pipe(through2.obj(function(file, enc, next){
           var info = file.toString();
-          should.exist(info);          
+          should.exist(info);
           should.exist(info.indexOf("window.PRELOADER2") > 0 );
           should.exist(info.indexOf('cat1.jpeg') > 0);
           should.exist(info.indexOf('123.cat2.jpeg') > 0);
@@ -103,7 +103,7 @@ describe('gulp-image-preload',function(){
         }))
         .pipe(through2.obj(function(file, enc, next){
           var info = file.toString();
-          should.exist(info);          
+          should.exist(info);
           should.exist(info.indexOf("window.PRELOADER") > 0 );
           should.exist(info.indexOf('cat1.jpeg') > 0);
           should.exist(info.indexOf('"cat2.jpeg":"123.cat2.jpeg"') > 0);
@@ -145,16 +145,35 @@ describe('gulp-image-preload',function(){
       var pattern = path_join(__dirname, "fixtures", "*.jpeg");
       var dest = path_join(__dirname, "../tmp");
       deleteFolderRecursive(dest);
-      vfs
-        .src(pattern)
-        .pipe(imagepreload({ 
+      vfs.src(pattern)
+        .pipe(imagepreload({
           inline:path_join(__dirname, 'fixtures', 'index.html')
         }))
         .pipe(vfs.dest(dest))
         .on('end',function(){
-          should.equal(fs.existsSync('tmp/index.html'), true, 'file not exist');
+          should.equal(fs.existsSync('tmp/index.html'), true, 'file tmp/index.html not exist');
+          deleteFolderRecursive(dest);
+          done();
+
+        });
+    });
+    it('test create script file which integrates to another',function(done){
+      var pattern = path_join(__dirname, "fixtures", "*.jpeg");
+      var dest = path_join(__dirname, "../tmp");
+      deleteFolderRecursive(dest);
+      vfs.src(pattern)
+        .pipe(imagepreload({
+          inline:path_join(__dirname, 'fixtures', 'index.html'),
+          script:"test.js"
+        }))
+        .pipe(vfs.dest(dest))
+        .on('end',function(){
+          should.equal(fs.existsSync('tmp/index.html'), true, 'file tmp/index.html not exist');
+          should.equal(fs.existsSync('tmp/test.js'), true, 'file tmp/test.js not exist');
+          //deleteFolderRecursive(dest);
           done();
         });
+
     });
   });
 });
