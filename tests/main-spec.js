@@ -170,7 +170,7 @@ describe('gulp-image-preload',function(){
         .on('end',function(){
           should.equal(fs.existsSync('tmp/index.html'), true, 'file tmp/index.html not exist');
           should.equal(fs.existsSync('tmp/test.js'), true, 'file tmp/test.js not exist');
-          //deleteFolderRecursive(dest);
+          deleteFolderRecursive(dest);
           done();
         });
 
