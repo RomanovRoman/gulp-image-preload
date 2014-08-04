@@ -4,25 +4,24 @@ var PluginError = gutil.PluginError;
 var path = require('path');
 var _ = require('lodash');
 var fs = require('fs');
+var vfs = require('vinyl-fs');
 
 module.exports = function (options) {
   options = _.defaults(options || {},{
     jsvar: "PRELOADER",
-    injectFile: function(filename){
-      return /\.html$/.test(filename);
-    },
     rev: false,
     reduceRev: function(filename) {
       return filename.replace(/([^\.]+)\.(.+)/, "$2");
     },
-    output:null
+    dest:null
   });
   if (options.inlineLoad === null) {
     options.inlineLoad = options.inlineFile;
   }
 
+  var templatePath = path.join(__dirname, 'template', 'inject.min.js');
+
   var buffer = {};
-  var injectFiles = [];  
 
   function processData(file, enc, next){
     var self = this;
@@ -35,10 +34,6 @@ module.exports = function (options) {
       return next();
     }
     var filename = path.normalize(file.path);
-    if(options.injectFile(filename)){
-      injectFiles.push(file);
-      return next();
-    }
     var pieces = filename.split(path.sep);
     var pointer = _.reduce(pieces.slice(0, pieces.length - 1), (function(pointer, item) {
       return pointer[item] || (pointer[item] = {});
@@ -48,45 +43,80 @@ module.exports = function (options) {
     pointer[processFilename] = filename;
     next();
   }
-  function endStream(next){
+
+  function endStream(finish){
     var self = this;
     var content = JSON.stringify(buffer);
-    
-    fs.readFile("template/inject.min.js",function(err, data){
-      if(!!err){
-        self.emit('error',err);
-        return next();
+
+    var rx = /<[ ]*\/[ ]*head[ ]*>/;
+    var rxClean = /<!--[ ]*preloader:js[ ]*-->.+<!--[ ]*endpreloader:js[ ]*-->/;
+
+    var through2_processTemplate = through2(function(buffer, enc, next){
+      if(enc != 'buffer' ){
+        self.emit('error', new PluginError('gulp-image-preload', 'Need buffer in load teamlage'));
       }
-      var fileData = data.toString();
+      var fileData = buffer.toString();
       fileData = fileData.replace(/window\.PRELOADER[ ]*=/, "");
       var script = "window." + options.jsvar + " = " + fileData + "; window." + options.jsvar + "=window." + options.jsvar + "(" + content + ");";
-      var result = "<!--preloader:js--><script> " + script + " </script><!--endpreloader:js--></head>";
-      if(!injectFiles.length){
-        var newFile = new gutil.File({            
-          path: options.output,
-          contents: new Buffer(result)
-        });
-        self.push(newFile);
+      this.push(new Buffer(script));
+      next();
+    });
+
+    var through2_finalize = through2(function(buffer, enc, next){
+      if(enc != 'buffer' ){
+        self.emit('error', new PluginError('gulp-image-preload', 'Need buffer in load teamlage'));
+      }
+      if(options.dest === null){
+        self.push(buffer);
         next();
-      } else {
-        var rx = /<[ ]*\/[ ]*head[ ]*>/;
-        var rxClean = /<!--[ ]*preloader:js[ ]*-->.+<!--[ ]*endpreloader:js[ ]*-->/;
-        injectFiles.forEach(function(file){
-          var html = file.contents.toString();
-          html = html.replace(rxClean, "");
-          html = html.replace(rx, result);
-          var newFile = new gutil.File({
-            cwd: file.cwd,
-            base: file.base,
-            path: file.path,
-            contents: new Buffer(html)
-          });          
-          self.push(newFile);
-        });
-        next();
+        finish();
+      } else {        
+        var script = buffer.toString();
+        var result = "<!--preloader:js--><script> " + script + " </script><!--endpreloader:js--></head>";
+        inline_script.call(this, options.dest, result, function(){
+          next();
+          finish();
+        });        
       }
     });
+
+    function inline_script(src, script, finish){
+      //receive paths of processing scripts
+      //and modify their contents
+      vfs.src(src).pipe(
+        through2.obj(
+          function(file, enc, next)
+          {
+            var html = file.contents.toString();
+            html = html.replace(rxClean, "");
+            html = html.replace(rx, script);
+
+            var newFile = new gutil.File({
+              cwd: file.cwd,
+              base: file.base,
+              path: file.path,
+              contents: new Buffer(html)
+            });
+
+            self.push(file);
+            next();
+          }, 
+          function(next)
+          {
+            next();
+            finish();
+          }
+        )
+      );
+    }
+    
+    
+    fs.createReadStream(templatePath)
+      .pipe(through2_processTemplate)
+      .pipe(through2_finalize);
   }
+
+
 
   return through2.obj(processData, endStream);
 };

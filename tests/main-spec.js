@@ -58,25 +58,21 @@ describe('gulp-image-preload',function(){
       });
       stream.write(streamFile);
     });
-    
+
     it('test simple output',function(done){
       var pattern = path_join(__dirname, "fixtures/*.jpeg");
       vfs
         .src(pattern)
         .pipe(imagepreload())
         .pipe(through2.obj(function(file, enc, next){
-          var info = file.contents.toString();
-          should.exist(info);
-          should.equal(info.indexOf('<!--preloader:js-->'), 0);
-          should.exist(info.indexOf('<!--endpreloader:js-->') > 0 );
-          should.equal(info.indexOf('</head>'), info.length - 7);
-          should.exist(info.indexOf("window.PRELOADER") > 0 );
-          should.exist(info.indexOf('cat1.jpeg') > 0);
-          should.exist(info.indexOf('123.cat2.jpeg') > 0);
+          var info = file.toString();
+          should.exist(info);          
+          should.exist(info.indexOf("window.PRELOADER") > 0 , 'window.PRELOADER');
+          should.exist(info.indexOf('cat1.jpeg') > 0, 'cat1.jpeg');
+          should.exist(info.indexOf('123.cat2.jpeg') > 0, '123.cat2.jpeg');
           next();
-        }, function(next){
-          next();
-          done()
+        }, function(){
+          done();
         }));
     });
     it('test custom output {jsvar}',function(done){
@@ -87,11 +83,8 @@ describe('gulp-image-preload',function(){
           jsvar:"PRELOADER2"
         }))
         .pipe(through2.obj(function(file, enc, next){
-          var info = file.contents.toString();
-          should.exist(info);
-          should.equal(info.indexOf('<!--preloader:js-->'), 0);
-          should.exist(info.indexOf('<!--endpreloader:js-->') > 0 );
-          should.equal(info.indexOf('</head>'), info.length - 7);
+          var info = file.toString();
+          should.exist(info);          
           should.exist(info.indexOf("window.PRELOADER2") > 0 );
           should.exist(info.indexOf('cat1.jpeg') > 0);
           should.exist(info.indexOf('123.cat2.jpeg') > 0);
@@ -109,11 +102,8 @@ describe('gulp-image-preload',function(){
           rev:true
         }))
         .pipe(through2.obj(function(file, enc, next){
-          var info = file.contents.toString();
-          should.exist(info);
-          should.equal(info.indexOf('<!--preloader:js-->'), 0);
-          should.exist(info.indexOf('<!--endpreloader:js-->') > 0 );
-          should.equal(info.indexOf('</head>'), info.length - 7);
+          var info = file.toString();
+          should.exist(info);          
           should.exist(info.indexOf("window.PRELOADER") > 0 );
           should.exist(info.indexOf('cat1.jpeg') > 0);
           should.exist(info.indexOf('"cat2.jpeg":"123.cat2.jpeg"') > 0);
@@ -123,12 +113,17 @@ describe('gulp-image-preload',function(){
           done();
         }));
     });
-    it('test custom output {injectFile}',function(done){
-      var pattern = path_join(__dirname, "fixtures/*.*");
+    it('test custom output {injectFiles}',function(done){
+      var pattern = path_join(__dirname, "fixtures", "*.*");
       var counts = 0;
       vfs
         .src(pattern)
-        .pipe(imagepreload())
+        .pipe(imagepreload({
+          dest:[
+            path_join(__dirname, 'fixtures', 'index.html'),
+            path_join(__dirname, 'fixtures', 'index2.html'),
+          ]
+        }))
         .pipe(through2.obj(function(file, enc, next){
           counts++;
           var info = file.contents.toString();
@@ -152,13 +147,14 @@ describe('gulp-image-preload',function(){
       deleteFolderRecursive(dest);
       vfs
         .src(pattern)
-        .pipe(imagepreload({ output:"test.js"}))
+        .pipe(imagepreload({ 
+          dest:path_join(__dirname, 'fixtures', 'index.html')
+        }))
         .pipe(vfs.dest(dest))
-        .on('end',function(){          
-          should.equal(fs.existsSync('tmp/test.js'), true, 'file not exist');
+        .on('end',function(){
+          should.equal(fs.existsSync('tmp/index.html'), true, 'file not exist');
           done();
         });
-          
     });
-  });  
+  });
 });
