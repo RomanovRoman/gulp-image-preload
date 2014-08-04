@@ -51,20 +51,20 @@ module.exports = function (options) {
     var rx = /<[ ]*\/[ ]*head[ ]*>/;
     var rxClean = /<!--[ ]*preloader:js[ ]*-->.+<!--[ ]*endpreloader:js[ ]*-->/;
 
-    var through2_processTemplate = through2(function(buffer, enc, next){
-      if(enc != 'buffer' ){
-        self.emit('error', new PluginError('gulp-image-preload', 'Need buffer in load teamlage'));
+    var through2_processTemplate = through2.obj(function(buffer, enc, next){
+      if(!buffer.isBuffer()){
+        self.emit('error', new PluginError('gulp-image-preload', 'Need buffer in load template'));
       }
-      var fileData = buffer.toString();
+      var fileData = buffer.contents.toString();
       fileData = fileData.replace(/window\.PRELOADER[ ]*=/, "");
       var script = "window." + options.jsvar + " = " + fileData + "; window." + options.jsvar + "=window." + options.jsvar + "(" + content + ");";
       this.push(new Buffer(script));
       next();
     });
 
-    var through2_finalize = through2(function(buffer, enc, next){
-      if(enc != 'buffer' ){
-        self.emit('error', new PluginError('gulp-image-preload', 'Need buffer in load teamlage'));
+    var through2_finalize = through2.obj(function(buffer, type, next){      
+      if(type != 'buffer'){
+        self.emit('error', new PluginError('gulp-image-preload', 'Need buffer in load template'));
       }
       if(options.dest === null){
         self.push(buffer);
@@ -109,9 +109,7 @@ module.exports = function (options) {
         )
       );
     }
-    
-    
-    fs.createReadStream(templatePath)
+    vfs.src([templatePath])
       .pipe(through2_processTemplate)
       .pipe(through2_finalize);
   }
