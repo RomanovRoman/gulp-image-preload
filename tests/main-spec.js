@@ -154,7 +154,6 @@ describe('gulp-image-preload',function(){
     it('test custom create new files',function(done){
       var pattern = path_join(__dirname, "fixtures", "*.jpeg");
       var dest = TMP;
-
       vfs.src(pattern)
         .pipe(imagepreload({
           inline:path_join(__dirname, 'fixtures', 'index.html')
@@ -184,9 +183,6 @@ describe('gulp-image-preload',function(){
 
           var data1 = fs.readFileSync('tmp/index.html').toString();
           data1.should.containEql("<script src='test.js'");
-
-
-
           done();
         });
 
