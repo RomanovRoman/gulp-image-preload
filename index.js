@@ -67,19 +67,10 @@ module.exports = function (options) {
       if(type != 'buffer'){
         self.emit('error', new PluginError('gulp-image-preload', 'Need buffer in load template'));
       }
-      if(options.inline === null){
-        self.push(buffer);
-        next();
-        finish();
-      } else {
-        var script = buffer.toString();
-        var result;
-        if(!!options.script){
-          result = "<!--preloader:js--><script src='" + options.scriptPath + "'></script><!--endpreloader:js--></head>";
-        } else {
-          result = "<!--preloader:js--><script> " + script + " </script><!--endpreloader:js--></head>";
-        }
-        if(options.script && !createScript){
+      var result;
+      if(options.script){
+        result = "<!--preloader:js--><script src='" + options.scriptPath + "'></script><!--endpreloader:js--></head>";        
+        if(!createScript){
           createScript = true;
           var scriptFile = new gutil.File({
             cwd:__dirname,
@@ -89,9 +80,21 @@ module.exports = function (options) {
           });
           self.push(scriptFile);
         }
+      } else {
+        result = "<!--preloader:js--><script> " + buffer.toString() + " </script><!--endpreloader:js--></head>";
+      }
+
+      if(options.inline){
         inline_script.call(this, options.inline, result, function(){
           next();
         });
+      } else if(!options.script) {
+        self.push(buffer);
+        next();
+        finish();
+      } else {
+        next();
+        finish();
       }
     }, function(next){
       next();

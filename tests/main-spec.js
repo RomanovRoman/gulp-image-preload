@@ -185,7 +185,23 @@ describe('gulp-image-preload',function(){
           data1.should.containEql("<script src='test.js'");
           done();
         });
+    });
+    it('test create script file without intergrates',function(done){
+      var pattern = path_join(__dirname, "fixtures", "*.jpeg");
+      var dest = TMP;
 
+      vfs.src(pattern)
+        .pipe(imagepreload({
+          inline:null,
+          script:"test.js"
+        }))
+        .pipe(vfs.dest(dest))
+        .on('end',function(){          
+          fs.existsSync('tmp/test.js').should.be.ok;
+          var data2 = fs.readFileSync('tmp/test.js').toString();
+          data2.should.containEql("window.PRELOADER");          
+          done();
+        });
     });
   });
 });
