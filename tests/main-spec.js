@@ -1,9 +1,26 @@
 var should = require('should');
+var through2 = require('through2');
 var imagepreload = require('../');
 var gutil = require('gulp-util');
 var fs = require('fs');
 var path_join = require('path').join;
 var vfs = require('vinyl-fs');
+
+var deleteFolderRecursive = function(path) {
+    var files = [];
+    if( fs.existsSync(path) ) {
+        files = fs.readdirSync(path);
+        files.forEach(function(file,index){
+            var curPath = path + "/" + file;
+            if(fs.lstatSync(curPath).isDirectory()) { // recurse
+                deleteFolderRecursive(curPath);
+            } else { // delete file
+                fs.unlinkSync(curPath);
+            }
+        });
+        fs.rmdirSync(path);
+    }
+};
 
 function imageFile(imagename){
   var base = path_join(__dirname,"fixtures");
@@ -18,7 +35,7 @@ function imageFile(imagename){
 
 describe('gulp-image-preload',function(){
   describe("imagepreload()",function(){
-    xit('emptyFile',function(done){
+    it('emptyFile',function(done){
       var stream = imagepreload();
       var emptyFile = {
         isNull: function(){ return true; }
@@ -29,7 +46,7 @@ describe('gulp-image-preload',function(){
       })
       stream.write(emptyFile);
     });
-    xit('fail stream',function(done){
+    it('fail stream',function(done){
       var stream = imagepreload()
       var streamFile = {
         isNull: function(){ return false; },
@@ -42,12 +59,13 @@ describe('gulp-image-preload',function(){
       stream.write(streamFile);
     });
     
-    xit('test simple output',function(done){
+    it('test simple output',function(done){
       var pattern = path_join(__dirname, "fixtures/*.jpeg");
       vfs
         .src(pattern)
         .pipe(imagepreload())
-        .on('data',function(info){          
+        .pipe(through2.obj(function(file, enc, next){
+          var info = file.contents.toString();
           should.exist(info);
           should.equal(info.indexOf('<!--preloader:js-->'), 0);
           should.exist(info.indexOf('<!--endpreloader:js-->') > 0 );
@@ -55,17 +73,21 @@ describe('gulp-image-preload',function(){
           should.exist(info.indexOf("window.PRELOADER") > 0 );
           should.exist(info.indexOf('cat1.jpeg') > 0);
           should.exist(info.indexOf('123.cat2.jpeg') > 0);
-        })
-        .on('end', done);
+          next();
+        }, function(next){
+          next();
+          done()
+        }));
     });
-    xit('test custom output {jsvar}',function(done){
+    it('test custom output {jsvar}',function(done){
       var pattern = path_join(__dirname, "fixtures/*.jpeg");
       vfs
         .src(pattern)
         .pipe(imagepreload({
           jsvar:"PRELOADER2"
         }))
-        .on('data',function(info){          
+        .pipe(through2.obj(function(file, enc, next){
+          var info = file.contents.toString();
           should.exist(info);
           should.equal(info.indexOf('<!--preloader:js-->'), 0);
           should.exist(info.indexOf('<!--endpreloader:js-->') > 0 );
@@ -73,17 +95,21 @@ describe('gulp-image-preload',function(){
           should.exist(info.indexOf("window.PRELOADER2") > 0 );
           should.exist(info.indexOf('cat1.jpeg') > 0);
           should.exist(info.indexOf('123.cat2.jpeg') > 0);
-        })
-        .on('end', done);
+          next();
+        }, function(next){
+          next();
+          done();
+        }));
     });
-    xit('test custom output {rev}',function(done){
+    it('test custom output {rev}',function(done){
       var pattern = path_join(__dirname, "fixtures/*.jpeg");
       vfs
         .src(pattern)
         .pipe(imagepreload({
           rev:true
         }))
-        .on('data',function(info){   
+        .pipe(through2.obj(function(file, enc, next){
+          var info = file.contents.toString();
           should.exist(info);
           should.equal(info.indexOf('<!--preloader:js-->'), 0);
           should.exist(info.indexOf('<!--endpreloader:js-->') > 0 );
@@ -91,16 +117,19 @@ describe('gulp-image-preload',function(){
           should.exist(info.indexOf("window.PRELOADER") > 0 );
           should.exist(info.indexOf('cat1.jpeg') > 0);
           should.exist(info.indexOf('"cat2.jpeg":"123.cat2.jpeg"') > 0);
-        })
-        .on('end', done);
+          next();
+        }, function(next){
+          next();
+          done();
+        }));
     });
-    xit('test custom output {injectFile}',function(done){
+    it('test custom output {injectFile}',function(done){
       var pattern = path_join(__dirname, "fixtures/*.*");
       var counts = 0;
       vfs
         .src(pattern)
         .pipe(imagepreload())
-        .on('data',function(file){   
+        .pipe(through2.obj(function(file, enc, next){
           counts++;
           var info = file.contents.toString();
           should.exist(info);
@@ -110,22 +139,25 @@ describe('gulp-image-preload',function(){
           should.exist(info.indexOf("window.PRELOADER") > 0 );
           should.exist(info.indexOf('cat1.jpeg') > 0);
           should.exist(info.indexOf('"cat2.jpeg":"123.cat2.jpeg"') > 0);
-        })
-        .on('end', function(){
+          next();
+        }, function(next){
           should.equal(counts,2);
+          next();
           done();
-        });
+        }));
     });
     it('test custom create new files',function(done){
-      var pattern = path_join(__dirname, "fixtures/*.*");
-      var counts = 0;
+      var pattern = path_join(__dirname, "fixtures", "*.jpeg");
       var dest = path_join(__dirname, "../tmp");
-
+      deleteFolderRecursive(dest);
       vfs
         .src(pattern)
-        .pipe(imagepreload())
+        .pipe(imagepreload({ output:"test.js"}))
         .pipe(vfs.dest(dest))
-        .on('finish',done);
+        .on('end',function(){          
+          should.equal(fs.existsSync('tmp/test.js'), true, 'file not exist');
+          done();
+        });
           
     });
   });  

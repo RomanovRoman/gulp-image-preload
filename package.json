@@ -22,7 +22,7 @@
   },
   "homepage": "https://github.com/lexich/gulp-image-preload",
   "dependencies": {
-    "gulp-util": "^2.2.16",    
+    "gulp-util": "^2.2.16",
     "lodash": "^2.4.1",
     "through2": "^0.4.2"
   },
