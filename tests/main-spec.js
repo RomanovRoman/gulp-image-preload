@@ -177,12 +177,19 @@ describe('gulp-image-preload',function(){
         .pipe(vfs.dest(dest))
         .on('end',function(){
           should.equal(fs.existsSync('tmp/index.html'), true, 'file tmp/index.html not exist');
-          should.equal(fs.existsSync('tmp/test.js'), true, 'file tmp/test.js not exist');
-          var data2 = fs.readFileSync('tmp/test.js').toString();
-          data2.should.containEql("window.PRELOADER");
 
           var data1 = fs.readFileSync('tmp/index.html').toString();
-          data1.should.containEql("<script src='test.js'");
+          data1.should.containEql("<script src='");
+          data1.should.containEql("test.js'></script><!--endpreloader:js--></head>")
+          var res = /<script src=\'([^\'\"]+)\'><\/script>/.exec(data1)
+          res.should.be.ok;
+          var path = RegExp.$1;
+          path.should.be.ok;
+
+
+          should.equal(fs.existsSync('tmp/' + path), true, 'file tmp/' + path + ' not exist');
+          var data2 = fs.readFileSync('tmp/' + path ).toString();
+          data2.should.containEql("window.PRELOADER");
           done();
         });
     });
@@ -193,13 +200,14 @@ describe('gulp-image-preload',function(){
       vfs.src(pattern)
         .pipe(imagepreload({
           inline:null,
-          script:"test.js"
+          script:"test.js",
+          md5: false
         }))
         .pipe(vfs.dest(dest))
-        .on('end',function(){          
+        .on('end',function(){
           fs.existsSync('tmp/test.js').should.be.ok;
           var data2 = fs.readFileSync('tmp/test.js').toString();
-          data2.should.containEql("window.PRELOADER");          
+          data2.should.containEql("window.PRELOADER");
           done();
         });
     });

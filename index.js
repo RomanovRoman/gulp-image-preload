@@ -5,6 +5,7 @@ var path = require('path');
 var _ = require('lodash');
 var fs = require('fs');
 var vfs = require('vinyl-fs');
+var md5 = require('MD5');
 
 module.exports = function (options) {
   options = _.defaults(options || {},{
@@ -15,7 +16,8 @@ module.exports = function (options) {
     },
     inline:null,
     script:null,
-    scriptPath:null
+    scriptPath:null,
+    md5: true
   });
   if(!options.scriptPath)
     options.scriptPath = options.script;
@@ -69,17 +71,21 @@ module.exports = function (options) {
       }
       var result;
       if(options.script){
-        result = "<!--preloader:js--><script src='" + options.scriptPath + "'></script><!--endpreloader:js--></head>";        
         if(!createScript){
           createScript = true;
+          if(options.md5){
+            var hash = md5(buffer).slice(0,6);
+            options.scriptPath = options.scriptPath.replace(/([^\/]+)\.js$/, hash + ".$1.js");
+          }
           var scriptFile = new gutil.File({
             cwd:__dirname,
             base:__dirname,
-            path: options.script,
+            path: options.scriptPath,
             contents: buffer
           });
           self.push(scriptFile);
         }
+        result = "<!--preloader:js--><script src='" + options.scriptPath + "'></script><!--endpreloader:js--></head>";
       } else {
         result = "<!--preloader:js--><script> " + buffer.toString() + " </script><!--endpreloader:js--></head>";
       }
