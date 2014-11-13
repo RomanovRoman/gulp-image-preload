@@ -1,11 +1,13 @@
-var through2 = require('through2');
-var gutil = require('gulp-util');
+"use strict";
+/*jshint -W068 */
+var through2 = require("through2");
+var gutil = require("gulp-util");
 var PluginError = gutil.PluginError;
-var path = require('path');
-var _ = require('lodash');
-var fs = require('fs');
-var vfs = require('vinyl-fs');
-var md5 = require('MD5');
+var path = require("path");
+var _ = require("lodash");
+var fs = require("fs");
+var vfs = require("vinyl-fs");
+var md5 = require("MD5");
 
 module.exports = function (options) {
   options = _.defaults(options || {},{
@@ -19,23 +21,26 @@ module.exports = function (options) {
     scriptPath:null,
     md5: true
   });
-  if(!options.scriptPath)
+  if(!options.scriptPath){
     options.scriptPath = options.script;
+  }
 
-  var templatePath = path.join(__dirname, 'template', 'inject.min.js');
+  var templatePath = path.join(__dirname, "template", "inject.min.js");
 
   var buffer = {};
 
   function processData(file, enc, next){
     if (file.isNull()) {
+      /*jshint validthis:true */
       this.push(file); // pass along
       return next();
     }
     if (file.isStream()) {
-      this.emit('error', new PluginError('gulp-image-preload', 'Streaming not supported'));
+      /*jshint validthis:true */
+      this.emit("error", new PluginError("gulp-image-preload", "Streaming not supported"));
       return next();
     }
-    var filename = path.normalize(file.path);
+    var filename = file.relative;
     var pieces = filename.split(path.sep);
     var pointer = _.reduce(pieces.slice(0, pieces.length - 1), (function(pointer, item) {
       return pointer[item] || (pointer[item] = {});
@@ -47,6 +52,7 @@ module.exports = function (options) {
   }
 
   function endStream(finish){
+    /*jshint validthis:true */
     var self = this;
     var content = JSON.stringify(buffer);
 
@@ -55,7 +61,7 @@ module.exports = function (options) {
 
     var through2_processTemplate = through2.obj(function(buffer, enc, next){
       if(!buffer.isBuffer()){
-        self.emit('error', new PluginError('gulp-image-preload', 'Need buffer in load template'));
+        self.emit("error", new PluginError("gulp-image-preload", "Need buffer in load template"));
       }
       var fileData = buffer.contents.toString();
       fileData = fileData.replace(/window\.PRELOADER[ ]*=/, "");
@@ -66,8 +72,8 @@ module.exports = function (options) {
 
     var createScript = false;
     var through2_finalize = through2.obj(function(buffer, type, next){
-      if(type != 'buffer'){
-        self.emit('error', new PluginError('gulp-image-preload', 'Need buffer in load template'));
+      if(type !== "buffer"){
+        self.emit("error", new PluginError("gulp-image-preload", "Need buffer in load template"));
       }
       var result;
       if(options.script){
@@ -85,7 +91,7 @@ module.exports = function (options) {
           });
           self.push(scriptFile);
         }
-        result = "<!--preloader:js--><script src='" + options.scriptPath + "'></script><!--endpreloader:js--></head>";
+        result = "<!--preloader:js--><script src=\'" + options.scriptPath + "\'></script><!--endpreloader:js--></head>";
       } else {
         result = "<!--preloader:js--><script> " + buffer.toString() + " </script><!--endpreloader:js--></head>";
       }
@@ -140,8 +146,5 @@ module.exports = function (options) {
       .pipe(through2_processTemplate)
       .pipe(through2_finalize);
   }
-
-
-
   return through2.obj(processData, endStream);
 };
