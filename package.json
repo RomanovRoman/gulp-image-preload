@@ -1,6 +1,6 @@
 {
   "name": "gulp-image-preload",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "image preload for gulp",
   "main": "index.js",
   "scripts": {
@@ -22,16 +22,16 @@
   },
   "homepage": "https://github.com/lexich/gulp-image-preload",
   "dependencies": {
-    "MD5": "^1.2.1",
-    "gulp-util": "^2.2.16",
-    "lodash": "^2.4.1",
-    "through2": "^0.4.2",
-    "vinyl-fs": "^0.3.0"
+    "MD5": "~1.2.1",
+    "gulp-util": "~3.0.1",
+    "lodash": "~2.4.1",
+    "through2": "~0.6.3",
+    "vinyl-fs": "~0.3.13"
   },
   "devDependencies": {
-    "jshint": "^2.5.1",
-    "mocha": "^1.20.0",
-    "should": "^4.0.0",
-    "vinyl-fs": "^0.3.0"
+    "jshint": "~2.5.1",
+    "mocha": "~2.0.1",
+    "should": "~4.3.0",
+    "vinyl-fs": "~0.3.13"
   }
 }
