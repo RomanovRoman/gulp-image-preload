@@ -84,8 +84,8 @@ module.exports = function (options) {
             options.scriptPath = options.scriptPath.replace(/([^\/]+)\.js$/, hash + ".$1.js");
           }
           var scriptFile = new gutil.File({
-            cwd:__dirname,
-            base:__dirname,
+            cwd:"",
+            base:"",
             path: options.scriptPath,
             contents: buffer
           });
