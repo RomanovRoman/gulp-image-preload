@@ -1,5 +1,5 @@
 {
-  "name": "gulp-image-preload",
+  "name": "gulp-image-preload-fix",
   "version": "0.0.6",
   "description": "image preload for gulp",
   "main": "index.js",
@@ -8,7 +8,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git://github.com/lexich/gulp-image-preload.git"
+    "url": "git://github.com/romanovroman/gulp-image-preload.git#publish_stub"
   },
   "keywords": [
     "gulp",
@@ -16,11 +16,15 @@
     "image_preload"
   ],
   "author": "lexich121@gmail.com",
+  "contributors": [
+    "name": "Roman Romanov"
+    "email": "romanovroman@yandex.ru"
+  ]
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/lexich/gulp-image-preload/issues"
+    "url": "https://github.com/romanovroman/gulp-image-preload/issues"
   },
-  "homepage": "https://github.com/lexich/gulp-image-preload",
+  "homepage": "https://github.com/romanovroman/gulp-image-preload",
   "dependencies": {
     "MD5": "~1.2.1",
     "gulp-util": "~3.0.1",
