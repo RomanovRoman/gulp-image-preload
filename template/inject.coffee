@@ -1,4 +1,4 @@
-window.PRELOADER = (preload)->  
+window.PRELOADER = (preload)->
   #injected
   class Preloader
     constructor:(options)->
@@ -9,9 +9,10 @@ window.PRELOADER = (preload)->
       complete:->
       progress:(n,src, type)->
       threads:1
+      imageBase: ""
 
     getFile:(path,_def="")->
-      pieces = path.split("/")      
+      pieces = path.split("/")
       newPath = ""
       ptr = preload
       for pie in pieces.slice(0,pieces.length-1)
@@ -33,7 +34,7 @@ window.PRELOADER = (preload)->
               path = root + key + "/"
               pf path, item
           d
-        pf "", _p
+        pf @options.imageBase, _p
       nextImage =
         index: 0
         procent: 0
@@ -42,7 +43,7 @@ window.PRELOADER = (preload)->
           100.0 * @procent / _p.length
         next: ->
           return null if _p.length <= @index
-          src = _p[@index]        
+          src = _p[@index]
           @index += 1
           return src
 
@@ -60,7 +61,7 @@ window.PRELOADER = (preload)->
       @_getImageObject = {} unless @_getImageObject?
       o = (@_getImageObject[index] or @_getImageObject[index] = {img:new Image, fn:null} )
       events = ["load","error"]
-      if o.fn?        
+      if o.fn?
         if o.img.removeEventListener
           o.img.removeEventListener ev, o.fn, false for ev in events
         else if img.detachEvent
@@ -68,14 +69,14 @@ window.PRELOADER = (preload)->
 
       o.fn = fn
       if o.img.addEventListener
-        o.img.addEventListener ev, o.fn, false for ev in events        
-      else if o.img.attachEvent        
+        o.img.addEventListener ev, o.fn, false for ev in events
+      else if o.img.attachEvent
         o.img.attachEvent "on#{ev}", o.fn for ev in events
 
       o.img
 
     loadImage: (index, nextImage, complete)->
-      if(src = nextImage.next())        
+      if(src = nextImage.next())
         img = @getImageObject index, (e)=>
           type = e?.type
           @options.progress nextImage.getPersent(), img.src, type, (new Date - @startLoading)

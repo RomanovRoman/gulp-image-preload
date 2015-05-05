@@ -12,7 +12,8 @@ window.PRELOADER = function(preload) {
     Preloader.prototype.options = {
       complete: function() {},
       progress: function(n, src, type) {},
-      threads: 1
+      threads: 1,
+      imageBase: ""
     };
 
     Preloader.prototype.getFile = function(path, _def) {
@@ -59,7 +60,7 @@ window.PRELOADER = function(preload) {
           }
           return d;
         };
-        return pf("", _p);
+        return pf(this.options.imageBase, _p);
       })(preload);
       nextImage = {
         index: 0,
