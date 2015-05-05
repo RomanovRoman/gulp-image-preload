@@ -17,9 +17,11 @@
   ],
   "author": "lexich121@gmail.com",
   "contributors": [
-    "name": "Roman Romanov"
-    "email": "romanovroman@yandex.ru"
-  ]
+    {
+      "name": "Roman Romanov",
+      "email": "romanovroman@yandex.ru"
+    }
+  ],
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/romanovroman/gulp-image-preload/issues"
